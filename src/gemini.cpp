@@ -78,27 +78,25 @@ vector<char> download(string url, long* responseCode)
 int get_geminis_response(string& prompt)
 {
     const string key = "";
-    const string url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=" + key;
-//-H 'Content-Type: application/json' 
-/*
- '{
-  "contents": [{
-    "parts":[{"text": "Explain how AI works"}]
-    }]
-   }'";
-    */
+    const string base_url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=";
+    const string url = base_url + key;
     CURL* curl = curl_easy_init();
     struct curl_slist *headers = NULL;
     headers = curl_slist_append(headers, "Content-Type: application/json");
-    string json = "{\"contents\":[\{\"parts\": [\{\"text\": \"How to use nano?\"}]}]}";
-
+    string jsonStr = "{"
+                        "\"contents\": [{"
+                            "\"parts\": [{"
+                                "\"text\": \"" + prompt + "\""
+                            "}]"
+                        "}]"
+                     "}";
     // Set remote URL.
     curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
 
     // Don't bother trying IPv6, which would increase DNS resolution time.
     curl_easy_setopt(curl, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
-    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, json.c_str());
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, jsonStr.c_str());
     curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
     // Don't wait forever, time out after 30 seconds.
     curl_easy_setopt(curl, CURLOPT_TIMEOUT, 30);
@@ -136,8 +134,8 @@ int get_geminis_response(string& prompt)
         {
             cout << "Successfully parsed JSON data" << endl;
             cout << "\nJSON data received:" << endl;
-            cout << jsonData.toStyledString() << endl;
-            
+            //cout << jsonData.toStyledString() << endl;
+            prompt = jsonData.toStyledString();
             //const string response = jsonData["candidates"].asString();
             //const size_t unixTimeMs(jsonData["milliseconds_since_epoch"].asUInt64());
             //const string timeString(jsonData["time"].asString());
