@@ -15,6 +15,7 @@
 #include <iostream>
 #include <memory>
 #include <string>
+#include <regex>
 
 #include <sysexits.h>
 #include <sys/socket.h>
@@ -75,9 +76,8 @@ vector<char> download(string url, long* responseCode)
     return data;
 }
 
-int get_geminis_response(string& prompt)
+int get_geminis_response(string& prompt, const string& key)
 {
-    const string key = "";
     const string base_url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=";
     const string url = base_url + key;
     CURL* curl = curl_easy_init();
@@ -158,8 +158,30 @@ int get_geminis_response(string& prompt)
 
 }
 
+int format_response(string& response) {
+    Json::Value root;
+    Json::Reader reader;
+    bool parsingSuccessful = reader.parse(response, root);
+    if ( !parsingSuccessful )
+    {
+        cout << "Error parsing the string" << endl;
+        return -1;
+    }
 
+    string text = root["candidates"][0]["content"]["parts"][0]["text"].toStyledString();
+    text = regex_replace(text, regex("\\\\n"), "\n");
+    cout << text;
 
+    return 0;
+}
 
+/*
+std::map<std::string, double> dictionary = std::map<std::string, double>(parsed_data_.at("conversion_rates"));
+
+        for( const auto& i : dictionary ) {
+            //std::cout << "key:" << i.first << "->"  << "value:"<< i.second << std::endl;
+            currencies.insert(i.first);
+        }
+*/
 
 

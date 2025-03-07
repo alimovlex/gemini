@@ -8,13 +8,28 @@
 
 #include "gemini.hpp"
 
+
 using namespace std;
 
 int main(int argc, char **argv) {
+
     string prompt;
-    cout << "What is your question to Gemini today?" << endl;
-    getline(cin, prompt);
-    get_geminis_response(prompt);
-    cout << "RESPONSE:" << endl << prompt;
-    return 0;
+    const string key = "";
+
+    if (key.empty()) {
+        cerr << "ERROR!!! NO API KEY PROVIDED!!!" << endl;
+        return -1;
+    } else {
+        cout << "What is your question to Gemini today?" << endl;
+    
+        while (prompt.empty()) {
+        getline(cin, prompt);
+        }
+    
+        get_geminis_response(prompt, key);
+        format_response(prompt);
+
+        return 0;
+    } 
+    
 }
