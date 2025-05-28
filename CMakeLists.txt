@@ -11,8 +11,8 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 # Build an executable program using the plus library (C code)
 # It is not used when performing only tests, so there is no need to build.
 # C++ includes
-include_directories(inc)
-add_executable(gemini main.cpp
-	      		 src/gemini.cpp)
+include_directories(${PROJECT_SOURCE_DIR}/inc)
+file(GLOB SRCS "${PROJECT_SOURCE_DIR}/src/*.cpp" "main.cpp")
+add_executable(gemini ${SRCS})
 target_link_libraries(gemini curl jsoncpp pthread)
 
