@@ -1,10 +1,3 @@
-/*
-    main.cpp
-    Sandbox
-
-    Created by alimovlex.
-    Copyright (c) 2020 alimovlex. All rights reserved.
-*/
 
 #include "gemini.hpp"
 
@@ -21,15 +14,15 @@ int main(int argc, char **argv) {
         return -1;
     } else {
         cout << "What is your question to Gemini today?" << endl;
-    
+
         while (prompt.empty()) {
-        getline(cin, prompt);
+            getline(cin, prompt);
         }
-    
+
         get_geminis_response(prompt, key);
-        format_response(prompt);
+        //format_response(prompt);
 
         return 0;
-    } 
-    
+    }
+
 }

@@ -1,14 +1,5 @@
-/*
-    Internet.cpp
-    The module represents my demo functions that interacts with internet.
-
-    Sandbox
-
-    Created by alimovlex.
-    Copyright (c) 2020 alimovlex. All rights reserved.
-*/
 #include <curl/curl.h>
-#include <json/json.h>
+#include <json.h>
 #include <sstream>
 #include <stdexcept>
 #include <cstdint>
@@ -26,7 +17,6 @@
 
 #include "gemini.hpp"
 using namespace std;
-using namespace Json;
 
 size_t callback(void* contents, size_t size, size_t nmemb, void* user)
 {
@@ -78,18 +68,18 @@ vector<char> download(string url, long* responseCode)
 
 int get_geminis_response(string& prompt, const string& key)
 {
-    const string base_url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=";
+    const string base_url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=";
     const string url = base_url + key;
     CURL* curl = curl_easy_init();
     struct curl_slist *headers = NULL;
     headers = curl_slist_append(headers, "Content-Type: application/json");
     string jsonStr = "{"
-                        "\"contents\": [{"
-                            "\"parts\": [{"
-                                "\"text\": \"" + prompt + "\""
-                            "}]"
-                        "}]"
-                     "}";
+                     "\"contents\": [{"
+                     "\"parts\": [{"
+                     "\"text\": \"" + prompt + "\""
+                                               "}]"
+                                               "}]"
+                                               "}";
     // Set remote URL.
     curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
 
@@ -123,65 +113,42 @@ int get_geminis_response(string& prompt, const string& key)
 
     if (httpCode == 200)
     {
-        //cout << "\nGot successful response from " << url << endl;
-
-        // Response looks good - done using Curl now.  Try to parse the results
-        // and print them out.
-        Value jsonData;
-        Reader jsonReader;
-
-        if (jsonReader.parse(*httpData.get(), jsonData))
-        {
-            cout << "Successfully parsed JSON data" << endl;
-            cout << "\nJSON data received:" << endl;
-            //cout << jsonData.toStyledString() << endl;
-            prompt = jsonData.toStyledString();
-            //const string response = jsonData["candidates"].asString();
-            //const size_t unixTimeMs(jsonData["milliseconds_since_epoch"].asUInt64());
-            //const string timeString(jsonData["time"].asString());
-            //cout << response << endl;
-            return 0;
+        json_object* resp_root = json_tokener_parse(httpData->c_str());
+        if (!resp_root) {
+            cerr << "Failed to parse JSON response" << endl;
+            return -1;
         }
-        else
-        {
-            cout << "Could not parse HTTP data as JSON" << endl;
-            cout << "HTTP data was:\n" << *httpData.get() << endl;
-            return 1;
-        }
+        format_response(resp_root);
     }
     else
     {
         cout << "Couldn't GET from " << url << " - exiting" << endl;
         return 1;
     }
-
-
-}
-
-int format_response(string& response) {
-    Json::Value root;
-    Json::Reader reader;
-    bool parsingSuccessful = reader.parse(response, root);
-    if ( !parsingSuccessful )
-    {
-        cout << "Error parsing the string" << endl;
-        return -1;
-    }
-
-    string text = root["candidates"][0]["content"]["parts"][0]["text"].toStyledString();
-    text = regex_replace(text, regex("\\\\n"), "\n");
-    cout << text;
-
     return 0;
 }
 
-/*
-std::map<std::string, double> dictionary = std::map<std::string, double>(parsed_data_.at("conversion_rates"));
+void format_response(json_object *resp_root) {
 
-        for( const auto& i : dictionary ) {
-            //std::cout << "key:" << i.first << "->"  << "value:"<< i.second << std::endl;
-            currencies.insert(i.first);
+    // Extract the text field: candidates[0].content.parts[0].text
+    json_object* candidates_arr = nullptr;
+    json_object_object_get_ex(resp_root, "candidates", &candidates_arr);
+    if (candidates_arr && json_object_get_type(candidates_arr) == json_type_array) {
+        json_object* first_candidate = json_object_array_get_idx(candidates_arr, 0);
+        json_object* content_obj = nullptr;
+        json_object_object_get_ex(first_candidate, "content", &content_obj);
+        json_object* parts_arr = nullptr;
+        json_object_object_get_ex(content_obj, "parts", &parts_arr);
+        if (parts_arr && json_object_get_type(parts_arr) == json_type_array) {
+            json_object* first_part = json_object_array_get_idx(parts_arr, 0);
+            json_object* text_obj = nullptr;
+            json_object_object_get_ex(first_part, "text", &text_obj);
+            if (text_obj) {
+                const char* text = json_object_get_string(text_obj);
+                cout << "Response: " << text << endl;
+                //prompt = text;   // optionally replace prompt with the answer
+            }
         }
-*/
-
-
+    }
+    json_object_put(resp_root);   // free parsed tree
+}

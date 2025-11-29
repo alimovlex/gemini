@@ -1,18 +1,75 @@
-cmake_minimum_required(VERSION 3.13)  # Automatically generated syntax
+﻿cmake_minimum_required(VERSION 3.18)
+project(Sandbox-vcpkg CXX)
 
-# project(gemini) --> When CLion project is created, it is automatically created if it is created as c project,
-# Because of this, the C++ gtest is not built.
-# Therefore, remove c as below.
-project(gemini)
+# Clear default flags for all compilers to ensure our settings take precedence.
+if(MSVC)
+    set(CMAKE_CXX_FLAGS_INIT "")
+    set(CMAKE_CXX_FLAGS_DEBUG_INIT "/Od /RTC1")
+    set(CMAKE_CXX_FLAGS_RELEASE_INIT "")
+else()
+    # Also clear the flags for GCC/Clang.
+    set(CMAKE_CXX_FLAGS_INIT "")
+    # CMake's default adds '-g'. We add it back here to ensure debug symbols.
+    set(CMAKE_CXX_FLAGS_DEBUG_INIT "-g")
+    # Release flags like -O3 and -DNDEBUG are set later, so we clear this.
+    set(CMAKE_CXX_FLAGS_RELEASE_INIT "")
+endif()
 
-set(CMAKE_C_STANDARD 17) # Automatic generation syntax when creating a C project
+# Set the C++ standard
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
-# Build an executable program using the plus library (C code)
-# It is not used when performing only tests, so there is no need to build.
-# C++ includes
-include_directories(${PROJECT_SOURCE_DIR}/inc)
-file(GLOB SRCS "${PROJECT_SOURCE_DIR}/src/*.cpp" "main.cpp")
-add_executable(gemini ${SRCS})
-target_link_libraries(gemini curl jsoncpp pthread)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+#find_package(glm CONFIG REQUIRED)
+#find_package(Stb REQUIRED)
+find_package(CURL REQUIRED)
+find_package(json-c CONFIG REQUIRED)
+
+file(GLOB SOURCES "src/*.cpp")
+add_executable(${PROJECT_NAME} ${SOURCES})
+
+if(MSVC)
+    message(STATUS "Configuring for MSVC compiler")
+    # wd9025 disables override warning for compiler arguments
+    set(COMMON_COMPILER_FLAGS /W4 /external:W3 /permissive- /GS /MP  /wd9025)
+    set(DEBUG_COMPILER_FLAGS /MDd)
+    set(RELEASE_COMPILER_FLAGS /MD /O2 /Oi /Gy /arch:AVX2)
+
+elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+    message(STATUS "Configuring for GCC compiler")
+    set(COMMON_COMPILER_FLAGS -Wall -Wextra -Wpedantic -fstack-protector-strong)
+    set(DEBUG_COMPILER_FLAGS "") # '-g' is now handled by CMAKE_CXX_FLAGS_DEBUG_INIT
+    set(RELEASE_COMPILER_FLAGS -O2 -march=native)
+
+else()
+    message(WARNING "Unsupported compiler: ${CMAKE_CXX_COMPILER_ID}. No specific flags will be set.")
+    set(COMMON_COMPILER_FLAGS "")
+    set(DEBUG_COMPILER_FLAGS "")
+    set(RELEASE_COMPILER_FLAGS "")
+endif()
+
+target_include_directories(${PROJECT_NAME} PRIVATE "inc")
+
+target_compile_options(${PROJECT_NAME} PRIVATE
+        ${COMMON_COMPILER_FLAGS}
+        $<$<CONFIG:Debug>:${DEBUG_COMPILER_FLAGS}>
+        $<$<CONFIG:Release>:${RELEASE_COMPILER_FLAGS}>
+)
+
+target_compile_definitions(${PROJECT_NAME} PRIVATE
+        $<$<CONFIG:Release>:NDEBUG>
+)
+
+set_property(TARGET ${PROJECT_NAME} PROPERTY INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
+
+target_link_libraries(${PROJECT_NAME} PRIVATE
+        CURL::libcurl
+        json-c::json-c
+)
+
+add_custom_command(
+        TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${CMAKE_SOURCE_DIR}/assets"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/assets"
+        COMMENT "Copying assets to build directory"
+)
