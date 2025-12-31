@@ -68,7 +68,7 @@ vector<char> download(string url, long* responseCode)
 
 int get_geminis_response(string& prompt, const string& key)
 {
-    const string base_url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=";
+    const string base_url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=";
     const string url = base_url + key;
     CURL* curl = curl_easy_init();
     struct curl_slist *headers = NULL;
