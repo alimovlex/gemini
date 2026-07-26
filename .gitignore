@@ -84,7 +84,12 @@ ipch/
 # This assumes other developers will run `git submodule update --init`.
 # If you check in vcpkg binaries, you would remove this.
 # =============================================================================
-/vcpkg/
+# Ignore vcpkg build and package artifacts, but keep the submodule tracked
+vcpkg_installed/
+vcpkg/buildtrees/
+vcpkg/packages/
+vcpkg/downloads/
+vcpkg/installed/
 
 
 # =============================================================================
