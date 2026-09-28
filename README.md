@@ -1,4 +1,4 @@
-# OpenGL-CMake-Template
+# Gemini
 ### Windows 11 Setup Guide
 
 - Install Visual Studio 2022 with the C++ Development option, with Linux support selected (if you want to build for Linux using wsl2).
