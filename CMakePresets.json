@@ -7,10 +7,10 @@
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/out/build/${presetName}",
       "installDir": "${sourceDir}/out/install/${presetName}",
-
       "cacheVariables": {
-        "CMAKE_CXX_COMPILER": "cl.exe",
-        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake"
+          "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
+          "VCPKG_TARGET_TRIPLET": "x64-mingw-static",
+          "VCPKG_HOST_TRIPLET": "x64-mingw-static"
       },
       "condition": {
         "type": "equals",
@@ -19,14 +19,14 @@
       }
     },
     {
-      "name": "windows-msvc-debug",
-      "displayName": "Windows MSVC Debug",
+      "name": "windows-msys-debug",
+      "displayName": "Windows MSYS Debug",
       "inherits": "windows-base",
       "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" }
     },
     {
-      "name": "windows-msvc-release",
-      "displayName": "Windows MSVC Release",
+      "name": "windows-msys-release",
+      "displayName": "Windows MSYS Release",
       "inherits": "windows-base",
       "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" }
     },
